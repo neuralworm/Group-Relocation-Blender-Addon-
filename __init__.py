@@ -22,56 +22,89 @@ bl_info = {
     "warning" : "",
     "category" : "Generic"
 }
+# Properties
+class COORDINATE_PROPERTIES(bpy.types.PropertyGroup):
+    x: bpy.props.FloatProperty(name="X", default= 0)
+    y: bpy.props.FloatProperty(name="Y", default= 0)
+    z: bpy.props.FloatProperty(name="Z", default= 0)
 
-class CoordinatePanel(bpy.types.Panel):
+  
+
+
+class COORDINATE_PANEL_PT_panel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
-    bl_label = "Place at Coordinates"
+    bl_label = "Object Coordinates"
     bl_context = "objectmode"
-    
+    bl_idname = "COORDINATE_PANEL_PT_panel"
+    @classmethod
+    def poll(self, context):
+        return len(context.selected_objects) != 0
+
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
+        coordinates = scene.object_coordinates
         row = layout.row()
-        row.label(text = "x")
-        row.prop(CoordinateOperator.bl_idname, text="Test Place")
-        row = layout.row()
-        row.label(text = "y")
-        row.operator(CoordinateOperator.bl_idname, text="Test Place")
-        row = layout.row()
-        row.label(text = "z")
-        row.operator(CoordinateOperator.bl_idname, text="Test Place")
+        row.operator(RESET_COORD_OPERATOR.bl_idname, icon="OUTLINER_OB_EMPTY")
 
-class CoordinateOperator(bpy.types.Operator):
+        layout.prop(coordinates, "x")
+        layout.prop(coordinates, "y")
+        layout.prop(coordinates, "z")
+
+        row = layout.row()
+        row.operator(COORDINATE_PLACEMENT_OPERATOR.bl_idname, icon="OUTLINER_OB_EMPTY")
+       
+class COORDINATE_PLACEMENT_OPERATOR(bpy.types.Operator):
     bl_idname = "object.place_at_coords"
     bl_label = "Place at Coordinates"
     bl_description = "Enter object location manually."
-    bl_options = {'REGISTER', 'UNDO'}
 
-    x: bpy.props.FloatProperty(name="X")
-    y = 0
-    z = 0
     @classmethod
     def poll(self, context):
-        if context.active_object:
-            self.x = context.active_object.location.x
-            self.y = context.active_object.location.y
-            self.z = context.active_object.location.z
-        print(self.x + " " + self.y + " " + self.z)
-        return {"FINISHED"}
+        return context.object is not None
     def execute(self, context):
-        print("Run")
+        scene = context.scene
+        coordinates = scene.object_coordinates
+        object = context.object
+        object.location.x = coordinates.x
+        object.location.y = coordinates.y
+        object.location.z = coordinates.z
         return {"FINISHED"}
 
+class RESET_COORD_OPERATOR(bpy.types.Operator):
+    bl_idname = "object.reset_coordinates"
+    bl_label = "Zero out vector"
+    bl_description = "Zero out vector"
+    
+    @classmethod
+    def poll(self, context):
+        return context.object is not None
+    def execute(self, context):
+        scene = context.scene
+        coordinates = scene.object_coordinates
+        coordinates.x = 0.0
+        coordinates.y = 0.0
+        coordinates.z = 0.0
+        return {"FINISHED"}
+
+
 toRegister = [
-    CoordinateOperator,
-    CoordinatePanel
+    COORDINATE_PROPERTIES,
+    COORDINATE_PLACEMENT_OPERATOR,
+    COORDINATE_PANEL_PT_panel,
+    RESET_COORD_OPERATOR
 ]
 def register():
     for i in toRegister:
         bpy.utils.register_class(i)
+    bpy.types.Scene.object_coordinates = bpy.props.PointerProperty(type = COORDINATE_PROPERTIES)
+
 def unregister():
     for i in toRegister:
         bpy.utils.unregister_class(i)
+    del bpy.types.Scene.object_coordinates
+
 
 if __name__ == "__main__":
     register()

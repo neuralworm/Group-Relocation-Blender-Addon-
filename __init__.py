@@ -16,7 +16,7 @@
 import bpy
 
 bl_info = {
-    "name" : "Object to Coordinates",
+    "name" : "Multi Relocate",
     "author" : "neuralworm",
     "description" : "Easy widget to take a single or group of objects and place them at designated coordinates.",
     "blender" : (2, 80, 0),
@@ -41,6 +41,7 @@ class COORDINATE_PANEL_PT_panel(bpy.types.Panel):
     bl_label = "Object Coordinates"
     bl_context = "objectmode"
     bl_idname = "COORDINATE_PANEL_PT_panel"
+    bl_category = "Multi Relocate"
     @classmethod
     def poll(self, context):
         return len(context.selected_objects) != 0
@@ -51,7 +52,6 @@ class COORDINATE_PANEL_PT_panel(bpy.types.Panel):
         coordinates = scene.object_coordinates
         row = layout.row()
         row.operator(RESET_COORD_OPERATOR.bl_idname, icon="OUTLINER_OB_EMPTY")
-
         layout.prop(coordinates, "x")
         layout.prop(coordinates, "y")
         layout.prop(coordinates, "z")

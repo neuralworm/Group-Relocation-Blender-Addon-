@@ -16,9 +16,9 @@
 import bpy
 
 bl_info = {
-    "name" : "placeatcoords",
-    "author" : "j",
-    "description" : "",
+    "name" : "Object to Coordinates",
+    "author" : "neuralworm",
+    "description" : "Easy widget to take a single or group of objects and place them at designated coordinates.",
     "blender" : (2, 80, 0),
     "version" : (0, 0, 1),
     "location" : "",
@@ -37,7 +37,7 @@ class MULTI_SELECT_PROPERTIES(bpy.types.PropertyGroup):
 
 class COORDINATE_PANEL_PT_panel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
-    bl_region_type = "TOOLS"
+    bl_region_type = "UI"
     bl_label = "Object Coordinates"
     bl_context = "objectmode"
     bl_idname = "COORDINATE_PANEL_PT_panel"
@@ -149,8 +149,6 @@ def register():
         bpy.utils.register_class(i)
     bpy.types.Scene.object_coordinates = bpy.props.PointerProperty(type = COORDINATE_PROPERTIES)
     bpy.types.Scene.multi_select_props = bpy.props.PointerProperty(type = MULTI_SELECT_PROPERTIES)
-
-
 def unregister():
     for i in toRegister:
         bpy.utils.unregister_class(i)

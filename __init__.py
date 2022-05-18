@@ -10,6 +10,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# This addon allows the easy relocation via x,y,z coordinates of both individual objects and groups of objects.
+
 import bpy
 
 bl_info = {
@@ -70,14 +73,36 @@ class COORDINATE_PLACEMENT_OPERATOR(bpy.types.Operator):
     def execute(self, context):
         # Determine if solo or group
         if len(context.selected_objects) > 1:
-            mean = self.getGroupMean(context.selected_objects)
+            self.moveGroup(context)
+        else:
+            self.moveOne(context)
+        
+        return {"FINISHED"}
+    def moveOne(self, context):
         scene = context.scene
         coordinates = scene.object_coordinates
         object = context.object
         object.location.x = coordinates.x
         object.location.y = coordinates.y
         object.location.z = coordinates.z
-        return {"FINISHED"}
+    def moveGroup(self, context):
+        group = context.selected_objects
+        scene = context.scene
+        coordinates = scene.object_coordinates
+        if(scene.multi_select_props.move_by_type == "All to Coordinate"):
+            for i in group:
+                i.location.x = coordinates.x
+                i.location.y = coordinates.y
+                i.location.z = coordinates.z
+        if(scene.multi_select_props.move_by_type == "Average to Coordinate"):
+            mean = self.getGroupMean(group)
+            translation = self.getGroupTranslation(mean, [coordinates.x, coordinates.y, coordinates.z])
+            # finish this
+            for i in group:
+                i.location.x -= translation[0]
+                i.location.y -= translation[1]
+                i.location.z -= translation[2]
+
     def getGroupMean(self, objects):
         vector = [0,0,0]
         for i in objects:
@@ -89,8 +114,10 @@ class COORDINATE_PLACEMENT_OPERATOR(bpy.types.Operator):
         for indx, i in enumerate(vector):
             vector[indx] = i / length 
         return vector
-    def getObjectOffset(self, object, mean):
-        return [mean[0] - object.location.x, mean[1] - object.location.y, mean[2] - object.location.z]
+    def getGroupTranslation(self, meanVector, desiredVector):
+        return [meanVector[0] - desiredVector[0], meanVector[1] - desiredVector[1], meanVector[2] - desiredVector[2]]
+    def getObjectTranslation(self, object, translationVector):
+        return [translationVector[0] - object.location.x, translationVector[1] - object.location.y, translationVector[2] - object.location.z]
 
 
 class RESET_COORD_OPERATOR(bpy.types.Operator):
